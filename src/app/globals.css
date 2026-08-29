@@ -1,0 +1,424 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surface colors & brand palette mapping */
+  --color-surface: #121414;
+  --color-surface-dim: #121414;
+  --color-surface-bright: #38393a;
+  --color-surface-container-lowest: #0c0f0f;
+  --color-surface-container-low: #1a1c1c;
+  --color-surface-container: #1e2020;
+  --color-surface-container-high: #282a2b;
+  --color-surface-container-highest: #333535;
+  --color-on-surface: #e2e2e2;
+  --color-on-surface-variant: #d0c5af;
+  --color-inverse-surface: #e2e2e2;
+  --color-inverse-on-surface: #2f3131;
+  --color-outline: #99907c;
+  --color-outline-variant: #4d4635;
+  --color-surface-tint: #e9c349;
+  
+  --color-primary: #f2ca50; /* Ember Gold */
+  --color-on-primary: #3c2f00;
+  --color-primary-container: #d4af37;
+  --color-on-primary-container: #554300;
+  --color-inverse-primary: #735c00;
+  
+  --color-secondary: #bcccab; /* Organic Green */
+  --color-on-secondary: #27341d;
+  --color-secondary-container: #3d4b31;
+  --color-on-secondary-container: #abba9a;
+  
+  --color-tertiary: #d0cecd;
+  --color-on-tertiary: #313030;
+  --color-tertiary-container: #b5b2b2;
+  --color-on-tertiary-container: #454545;
+  
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  
+  --color-background: #121414;
+  --color-on-background: #e2e2e2;
+  --color-surface-variant: #333535;
+
+  /* Font Optimization mappings */
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-hanken), sans-serif;
+
+  /* Layout and Spacing metrics */
+  --spacing-margin-mobile: 20px;
+  --spacing-margin-desktop: 64px;
+  --spacing-container-max: 1280px;
+  --spacing-gutter: 24px;
+  --spacing-unit: 8px;
+}
+
+/* ==========================================================================
+   Global Resets & Scroll settings
+   ========================================================================== */
+html, body {
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar hide utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================================================
+   Typographic Scales (Stitch Guide)
+   ========================================================================== */
+.display-lg {
+  font-family: var(--font-serif);
+  font-size: 84px;
+  font-weight: 700;
+  line-height: 92px;
+  letter-spacing: -0.02em;
+}
+
+.display-lg-mobile {
+  font-family: var(--font-serif);
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 52px;
+  letter-spacing: -0.01em;
+}
+
+.headline-md {
+  font-family: var(--font-serif);
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 48px;
+}
+
+.headline-sm {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 38px;
+}
+
+.body-lg {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+.body-md {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.label-caps {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Specific details */
+.text-outline {
+  -webkit-text-stroke: 1px var(--color-on-background);
+  color: transparent;
+}
+
+/* ==========================================================================
+   Brutalist UI Details (0px sharp corners)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  border-radius: 0;
+}
+
+.btn-sharp {
+  border-radius: 0 !important;
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.btn-primary-ember {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1px solid transparent;
+}
+
+.btn-primary-ember:hover {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-secondary-ghost {
+  background-color: transparent;
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-outline);
+}
+
+.btn-secondary-ghost:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.card-sharp {
+  border-radius: 0 !important;
+  border: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-low);
+  transition: border-color 0.4s ease;
+}
+
+.card-sharp:hover {
+  border-color: var(--color-outline);
+}
+
+.input-underline {
+  border-radius: 0 !important;
+  background: transparent !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid var(--color-outline-variant) !important;
+  padding: 12px 0 !important;
+  color: var(--color-on-surface) !important;
+  font-size: 16px !important;
+}
+
+.input-underline:focus {
+  border-bottom-color: var(--color-primary) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Background canvas placeholder styles */
+#webgl-background-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-background);
+  background-image: radial-gradient(circle at center, #1b1c1c 0%, #0c0f0f 100%);
+  z-index: -20;
+  pointer-events: none;
+}
+
+/* Exploded deconstructed layer transitions */
+.burger-layer-slice {
+  position: absolute;
+  width: 280px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.85));
+}
+
+@media (min-width: 768px) {
+  .burger-layer-slice {
+    width: 380px;
+  }
+}
+
+/* Section sizing */
+.section-padding {
+  padding-top: 120px;
+  padding-bottom: 120px;
+}
+
+/* Grid Utilities */
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+/* Anatomy Custom layouts */
+.anatomy-container {
+  position: relative;
+  width: 100%;
+  background-color: var(--color-background);
+}
+
+.anatomy-sticky-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 120px var(--spacing-margin-desktop);
+}
+
+.anatomy-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  max-width: var(--spacing-container-max);
+  margin: 0 auto;
+  align-items: center;
+  gap: 64px;
+}
+
+.anatomy-texts {
+  grid-column: span 5;
+}
+
+.anatomy-visual-container {
+  grid-column: span 7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Menu Custom layout structures */
+.menu-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.menu-card-img-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+}
+
+.menu-card-img {
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.menu-card:hover .menu-card-img {
+  transform: scale(1.08);
+}
+
+.menu-card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.chip {
+  display: inline-block;
+  padding: 4px 8px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid var(--color-outline-variant);
+  color: var(--color-on-surface-variant);
+}
+
+.chip-gold {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Drawer / Flyout Reservation Drawer style rules */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(12, 15, 15, 0.8);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.drawer-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  background-color: var(--color-surface);
+  border-left: 1px solid var(--color-outline-variant);
+  z-index: 110;
+  padding: 40px;
+  transform: translateX(100%);
+  transition: transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.drawer-backdrop.active .drawer {
+  transform: translateX(0);
+}
+
+.drawer-close {
+  align-self: flex-end;
+  background: transparent;
+  border: none;
+  color: var(--color-on-surface-variant);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 60px;
+}
+
+.drawer-close:hover {
+  color: var(--color-primary);
+}
+
+.drawer-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+/* Material Symbols Integration */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');

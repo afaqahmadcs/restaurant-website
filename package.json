@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "next": "15.1.0",
-    "react": "19.0.0-rc-66a30550-20241219",
-    "react-dom": "19.0.0-rc-66a30550-20241219"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.0.0-alpha.34",

@@ -61,7 +61,7 @@ export default function Home() {
         <Gallery />
 
         {/* Location Hours Info & Map */}
-        <Visit />
+        <Visit onOpenReservations={openReservations} />
       </main>
 
       {/* Footer Branding */}

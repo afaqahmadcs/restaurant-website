@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useRef, useEffect } from "react";
 import Image from "next/image";
 
 interface HeroProps {
@@ -6,49 +8,208 @@ interface HeroProps {
 }
 
 export default function Hero({ onOpenReservations }: HeroProps) {
-  return (
-    <section
-      className="relative min-h-screen w-full flex flex-col justify-between pt-32 pb-16 overflow-hidden"
-      id="hero"
-    >
-      {/* Background vignette & layout canvas placeholder */}
-      <div id="webgl-background-placeholder" />
-      <div className="absolute inset-0 bg-gradient-to-b from-surface-dim/60 via-transparent to-background -z-10 pointer-events-none" />
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-      {/* Main typography content */}
-      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-12 flex flex-col items-center justify-center flex-grow">
-        <h1 className="display-lg-mobile md:display-lg text-on-background uppercase mb-6 tracking-tighter drop-shadow-2xl">
-          The Art of the<br />
-          <span className="text-primary italic font-light font-serif">Burger</span>
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const gl = (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+    if (!gl) return;
+
+    // Compile shader helper
+    const compileShader = (type: number, src: string) => {
+      const s = gl.createShader(type);
+      if (!s) return null;
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error("Shader compile error:", gl.getShaderInfoLog(s));
+        gl.deleteShader(s);
+        return null;
+      }
+      return s;
+    };
+
+    // Shaders
+    const vs = `
+      attribute vec2 a_position;
+      varying vec2 v_texCoord;
+      void main() {
+        v_texCoord = a_position * 0.5 + 0.5;
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    const fs = `
+      precision highp float;
+      uniform float u_time;
+      uniform vec2 u_resolution;
+      uniform vec2 u_mouse;
+      varying vec2 v_texCoord;
+
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+
+      float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+        vec2 i  = floor(v + dot(v, C.yy) );
+        vec2 x0 = v -   i + dot(i, C.xx);
+        vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+        vec4 x12 = x0.xyxy + C.xxzz;
+        x12.xy -= i1;
+        i = mod289(i);
+        vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+        vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+        m = m*m;
+        m = m*m;
+        vec3 x = 2.0 * fract(p * C.www) - 1.0;
+        vec3 h = abs(x) - 0.5;
+        vec3 a0 = x - floor(x + 0.5);
+        m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+        vec3 g;
+        g.x  = a0.x  * x0.x  + h.x  * x0.y;
+        g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130.0 * dot(m, g);
+      }
+
+      void main() {
+        vec2 uv = v_texCoord;
+        vec2 center = uv - 0.5;
+        center.x *= u_resolution.x / u_resolution.y;
+
+        vec3 color = vec3(0.047, 0.051, 0.051); // #0c0f0f
+        float n1 = snoise(uv * 1.5 + u_time * 0.05);
+        float n2 = snoise(uv * 2.5 - u_time * 0.07);
+        float vignette = 1.0 - smoothstep(0.3, 1.2, length(center));
+
+        vec3 gold = vec3(0.831, 0.686, 0.216); // #d4af37
+        vec3 ember = vec3(0.5, 0.2, 0.05);
+        float glow = smoothstep(0.4, 0.7, n1 * n2);
+        color = mix(color, color + ember * 0.2, glow * vignette);
+
+        float smoke = snoise(uv * 3.0 + vec2(0.0, u_time * 0.2));
+        color += smoke * 0.01;
+
+        gl_FragColor = vec4(color * vignette, 1.0);
+      }
+    `;
+
+    const vertexShader = compileShader(gl.VERTEX_SHADER, vs);
+    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fs);
+    if (!vertexShader || !fragmentShader) return;
+
+    const prog = gl.createProgram();
+    if (!prog) return;
+    gl.attachShader(prog, vertexShader);
+    gl.attachShader(prog, fragmentShader);
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+    const pos = gl.getAttribLocation(prog, "a_position");
+    gl.enableVertexAttribArray(pos);
+    gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+
+    const uTime = gl.getUniformLocation(prog, "u_time");
+    const uRes = gl.getUniformLocation(prog, "u_resolution");
+    const uMouse = gl.getUniformLocation(prog, "u_mouse");
+
+    let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width && rect.height) {
+        const nx = (e.clientX - rect.left) / rect.width;
+        const ny = 1.0 - (e.clientY - rect.top) / rect.height;
+        mouse.x = nx * canvas.width;
+        mouse.y = ny * canvas.height;
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // Sync buffer size helper
+    const syncSize = () => {
+      const w = canvas.clientWidth || 1280;
+      const h = canvas.clientHeight || 720;
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+    };
+    syncSize();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(syncSize);
+      resizeObserver.observe(canvas);
+    }
+
+    let animId: number;
+    const render = (t: number) => {
+      if (!resizeObserver) syncSize();
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      if (uTime) gl.uniform1f(uTime, t * 0.001);
+      if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+      if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      animId = requestAnimationFrame(render);
+    };
+    render(0);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (resizeObserver) resizeObserver.disconnect();
+      cancelAnimationFrame(animId);
+    };
+  }, []);
+
+  return (
+    <section className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden pt-32 pb-0" id="hero">
+      {/* WebGL Canvas Background */}
+      <div className="absolute inset-0 w-full h-full -z-20 bg-background">
+        <canvas ref={canvasRef} className="w-full h-full block" />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background -z-10 pointer-events-none" />
+
+      {/* Hero Typography Content */}
+      <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-12 flex flex-col items-center">
+        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background uppercase mb-6 drop-shadow-2xl tracking-tighter">
+          THE ART OF THE<br />
+          <span className="text-primary italic font-light font-headline-md md:font-display-lg">BURGER</span>
         </h1>
-        <p className="body-lg text-on-surface-variant max-w-xl mx-auto mb-10">
-          A modern reimagining of the classic steakhouse. Where elemental fire meets meticulous craft in a dark, luxury dining lounge.
+        <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10">
+          A redefinition of the classic, crafted for the discerning palate. Where provenance meets precision.
         </p>
-        <div className="flex flex-col sm:flex-row gap-6 items-center justify-center">
+        <div className="flex flex-col sm:flex-row gap-6 items-center justify-center mb-12">
           <button
-            className="btn btn-sharp btn-primary-ember cursor-pointer"
+            className="bg-primary text-on-primary font-label-caps text-label-caps px-10 py-4 uppercase tracking-widest hover:bg-[#ffe088] transition-colors duration-300 cursor-pointer btn-sharp"
             onClick={onOpenReservations}
           >
             Book an Experience
           </button>
-          <a className="btn btn-sharp btn-secondary-ghost" href="#menu">
+          <a
+            className="border border-outline text-on-background font-label-caps text-label-caps px-10 py-4 uppercase tracking-widest hover:border-primary hover:text-primary transition-colors duration-300 cursor-pointer btn-sharp"
+            href="#menu"
+          >
             View Menu
           </a>
         </div>
       </div>
 
-      {/* Hero Visual Burger Image */}
-      <div
-        className="relative z-20 w-full max-w-xl md:max-w-2xl mx-auto px-4 mt-auto animate-float flex justify-center translate-y-12"
-        id="burger-hero-container"
-      >
+      {/* Floating Burger Image */}
+      <div className="relative z-20 w-full max-w-4xl mx-auto px-4 mt-auto animate-float flex justify-center translate-y-12" id="burger-hero-container">
         <Image
           src="/assets/wagyu-burger.png"
           alt="Gourmet signature wagyu beef burger"
-          width={680}
-          height={680}
+          width={800}
+          height={800}
           priority
-          className="w-full h-auto object-contain drop-shadow-[0_25px_45px_rgba(0,0,0,0.95)]"
+          className="w-full h-auto object-contain drop-shadow-[0_25px_35px_rgba(0,0,0,0.8)]"
         />
       </div>
     </section>

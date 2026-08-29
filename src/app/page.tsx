@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Story from "@/components/Story";
@@ -10,9 +10,30 @@ import Gallery from "@/components/Gallery";
 import Visit from "@/components/Visit";
 import ReservationDrawer from "@/components/ReservationDrawer";
 import Footer from "@/components/Footer";
+import Lenis from "lenis";
 
 export default function Home() {
   const [isReservationsOpen, setIsReservationsOpen] = useState(false);
+
+  useEffect(() => {
+    // Initialise Lenis smooth scroller
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
 
   const openReservations = () => setIsReservationsOpen(true);
   const closeReservations = () => setIsReservationsOpen(false);

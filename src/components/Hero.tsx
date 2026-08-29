@@ -2,6 +2,9 @@
 
 import React, { useRef, useEffect } from "react";
 import Image from "next/image";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 
 interface HeroProps {
   onOpenReservations: () => void;
@@ -9,7 +12,9 @@ interface HeroProps {
 
 export default function Hero({ onOpenReservations }: HeroProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
+  // WebGL Background compilation & rendering logic
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -17,7 +22,6 @@ export default function Hero({ onOpenReservations }: HeroProps) {
     const gl = (canvas.getContext("webgl") || canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
     if (!gl) return;
 
-    // Compile shader helper
     const compileShader = (type: number, src: string) => {
       const s = gl.createShader(type);
       if (!s) return null;
@@ -31,7 +35,6 @@ export default function Hero({ onOpenReservations }: HeroProps) {
       return s;
     };
 
-    // Shaders
     const vs = `
       attribute vec2 a_position;
       varying vec2 v_texCoord;
@@ -79,12 +82,12 @@ export default function Hero({ onOpenReservations }: HeroProps) {
         vec2 center = uv - 0.5;
         center.x *= u_resolution.x / u_resolution.y;
 
-        vec3 color = vec3(0.047, 0.051, 0.051); // #0c0f0f
+        vec3 color = vec3(0.047, 0.051, 0.051);
         float n1 = snoise(uv * 1.5 + u_time * 0.05);
         float n2 = snoise(uv * 2.5 - u_time * 0.07);
         float vignette = 1.0 - smoothstep(0.3, 1.2, length(center));
 
-        vec3 gold = vec3(0.831, 0.686, 0.216); // #d4af37
+        vec3 gold = vec3(0.831, 0.686, 0.216);
         vec3 ember = vec3(0.5, 0.2, 0.05);
         float glow = smoothstep(0.4, 0.7, n1 * n2);
         color = mix(color, color + ember * 0.2, glow * vignette);
@@ -132,7 +135,6 @@ export default function Hero({ onOpenReservations }: HeroProps) {
     };
     window.addEventListener("mousemove", handleMouseMove);
 
-    // Sync buffer size helper
     const syncSize = () => {
       const w = canvas.clientWidth || 1280;
       const h = canvas.clientHeight || 720;
@@ -168,8 +170,135 @@ export default function Hero({ onOpenReservations }: HeroProps) {
     };
   }, []);
 
+  // GSAP Entrance & Scroll-Driven ScrollTrigger Actions
+  useGSAP(() => {
+    // Check prefers-reduced-motion media query
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      gsap.set("#hero-title, #hero-desc, #hero-ctas, #burger-hero-container img", {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+      });
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Cinematic entrance timeline
+    const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+
+    tl.fromTo(
+      "#hero-title",
+      { opacity: 0, y: 60 },
+      { opacity: 1, y: 0, duration: 1.6, delay: 0.2 }
+    );
+    tl.fromTo(
+      "#hero-desc",
+      { opacity: 0, y: 40 },
+      { opacity: 1, y: 0, duration: 1.4 },
+      "-=1.2"
+    );
+    tl.fromTo(
+      "#hero-ctas",
+      { opacity: 0, y: 30 },
+      { opacity: 1, y: 0, duration: 1.2 },
+      "-=1.0"
+    );
+    tl.fromTo(
+      "#burger-hero-container img",
+      { opacity: 0, scale: 0.82, y: 100 },
+      { opacity: 1, scale: 1, y: 0, duration: 2.0, ease: "power3.out" },
+      "-=1.4"
+    );
+
+    // 2. Responsive Scroll-Driven Parallax mapping via media queries
+    const mm = gsap.matchMedia();
+
+    // Desktop
+    mm.add("(min-width: 768px)", () => {
+      gsap.to("#hero-title", {
+        scrollTrigger: {
+          trigger: "#hero",
+          start: "top top",
+          end: "bottom center",
+          scrub: true,
+        },
+        y: -120,
+        opacity: 0,
+        ease: "none",
+      });
+
+      gsap.to("#hero-desc", {
+        scrollTrigger: {
+          trigger: "#hero",
+          start: "top top",
+          end: "bottom center",
+          scrub: true,
+        },
+        y: -80,
+        opacity: 0,
+        ease: "none",
+      });
+
+      gsap.to("#hero-ctas", {
+        scrollTrigger: {
+          trigger: "#hero",
+          start: "top top",
+          end: "bottom center",
+          scrub: true,
+        },
+        y: -50,
+        opacity: 0,
+        ease: "none",
+      });
+
+      // Signature burger responsive scroll (scaling, subtle rotation, vertical shift)
+      gsap.to("#burger-hero-container img", {
+        scrollTrigger: {
+          trigger: "#hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: 1.0,
+        },
+        scale: 0.75,
+        rotation: -6,
+        y: 160,
+        transformOrigin: "center center",
+        ease: "power1.inOut",
+      });
+    });
+
+    // Mobile
+    mm.add("(max-width: 767px)", () => {
+      gsap.to("#hero-title, #hero-desc, #hero-ctas", {
+        scrollTrigger: {
+          trigger: "#hero",
+          start: "top top",
+          end: "bottom center",
+          scrub: true,
+        },
+        opacity: 0,
+        y: -40,
+        ease: "none",
+      });
+
+      gsap.to("#burger-hero-container img", {
+        scrollTrigger: {
+          trigger: "#hero",
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+        scale: 0.88,
+        y: 60,
+        ease: "power1.inOut",
+      });
+    });
+  }, { scope: containerRef });
+
   return (
-    <section className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden pt-32 pb-0" id="hero">
+    <section ref={containerRef} className="relative min-h-screen w-full flex flex-col items-center justify-start overflow-hidden pt-32 pb-0" id="hero">
       {/* WebGL Canvas Background */}
       <div className="absolute inset-0 w-full h-full -z-20 bg-background">
         <canvas ref={canvasRef} className="w-full h-full block" />
@@ -178,14 +307,14 @@ export default function Hero({ onOpenReservations }: HeroProps) {
 
       {/* Hero Typography Content */}
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-12 flex flex-col items-center">
-        <h1 className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background uppercase mb-6 drop-shadow-2xl tracking-tighter">
+        <h1 id="hero-title" className="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background uppercase mb-6 drop-shadow-2xl tracking-tighter">
           THE ART OF THE<br />
           <span className="text-primary italic font-light font-headline-md md:font-display-lg">BURGER</span>
         </h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10">
+        <p id="hero-desc" className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto mb-10">
           A redefinition of the classic, crafted for the discerning palate. Where provenance meets precision.
         </p>
-        <div className="flex flex-col sm:flex-row gap-6 items-center justify-center mb-12">
+        <div id="hero-ctas" className="flex flex-col sm:flex-row gap-6 items-center justify-center mb-12">
           <button
             className="bg-primary text-on-primary font-label-caps text-label-caps px-10 py-4 uppercase tracking-widest hover:bg-[#ffe088] transition-colors duration-300 cursor-pointer btn-sharp"
             onClick={onOpenReservations}

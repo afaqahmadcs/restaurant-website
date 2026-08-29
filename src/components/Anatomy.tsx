@@ -1,16 +1,107 @@
-import React from "react";
+"use client";
+
+import React, { useRef } from "react";
 import Image from "next/image";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 
 export default function Anatomy() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  
+  // Image Refs
+  const crownRef = useRef<HTMLImageElement | null>(null);
+  const tomatoRef = useRef<HTMLImageElement | null>(null);
+  const cheeseRef = useRef<HTMLImageElement | null>(null);
+  const pattyRef = useRef<HTMLImageElement | null>(null);
+  const heelRef = useRef<HTMLImageElement | null>(null);
+
+  // Text List Item Refs
+  const item1Ref = useRef<HTMLDivElement | null>(null);
+  const item2Ref = useRef<HTMLDivElement | null>(null);
+  const item3Ref = useRef<HTMLDivElement | null>(null);
+  const item4Ref = useRef<HTMLDivElement | null>(null);
+
+  useGSAP(() => {
+    // Check prefers-reduced-motion media query
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      // Keep slices exploded slightly for static readability, don't pin
+      gsap.set(crownRef.current, { y: -50 });
+      gsap.set(tomatoRef.current, { y: -20 });
+      gsap.set(cheeseRef.current, { y: 10 });
+      gsap.set(pattyRef.current, { y: 40 });
+      gsap.set(heelRef.current, { y: 70 });
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const mm = gsap.matchMedia();
+
+    // Desktop Scrolling Pin Experience
+    mm.add("(min-width: 768px)", () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "+=180%", // Scroll space length of the pin
+          scrub: 1.2,
+          pin: true,
+        }
+      });
+
+      // 1. Staggered layer explosion
+      tl.to(crownRef.current, { y: -210, rotation: -4, scale: 1.05, ease: "none" }, 0)
+        .to(tomatoRef.current, { y: -100, rotation: 3, scale: 1.02, ease: "none" }, 0)
+        .to(cheeseRef.current, { y: 0, rotation: -2, ease: "none" }, 0)
+        .to(pattyRef.current, { y: 100, rotation: 2, scale: 1.02, ease: "none" }, 0)
+        .to(heelRef.current, { y: 210, rotation: -3, scale: 1.05, ease: "none" }, 0);
+
+      // 2. Text item staggers (0 is crown active, 1 is tomato active, etc.)
+      tl.fromTo(item1Ref.current, { opacity: 1, scale: 1 }, { opacity: 0.15, scale: 0.95, duration: 0.2 }, 0.15)
+        
+        .fromTo(item2Ref.current, { opacity: 0.15, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.2 }, 0.25)
+        .to(item2Ref.current, { opacity: 0.15, scale: 0.95, duration: 0.2 }, 0.45)
+        
+        .fromTo(item3Ref.current, { opacity: 0.15, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.2 }, 0.55)
+        .to(item3Ref.current, { opacity: 0.15, scale: 0.95, duration: 0.2 }, 0.75)
+        
+        .fromTo(item4Ref.current, { opacity: 0.15, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.2 }, 0.85);
+    });
+
+    // Mobile Scrolling linear reveals
+    mm.add("(max-width: 767px)", () => {
+      const items = gsap.utils.toArray(".mobile-anatomy-item");
+      items.forEach((item: any) => {
+        gsap.fromTo(
+          item,
+          { opacity: 0, y: 60 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: item,
+              start: "top 80%",
+              toggleActions: "play none none reverse",
+            }
+          }
+        );
+      });
+    });
+  }, { scope: containerRef });
+
   return (
-    <section className="anatomy-container" id="anatomy">
+    <section ref={containerRef} className="anatomy-container relative w-full" id="anatomy">
       {/* Desktop Layout (Split Sticky Anatomy) */}
       <div className="hidden md:block">
-        <div className="anatomy-sticky-section">
-          <div className="anatomy-grid">
+        <div className="anatomy-sticky-section min-h-screen w-full flex items-center">
+          <div className="anatomy-grid w-full">
             {/* Left Side: Explaining Text Layers */}
             <div className="anatomy-texts">
-              <div className="space-y-16">
+              <div className="space-y-12">
                 <div>
                   <span className="label-caps text-primary tracking-widest mb-4 block">
                     The Construct
@@ -20,15 +111,15 @@ export default function Anatomy() {
                     <br />
                     MATTERS.
                   </h2>
-                  <p className="body-md text-on-surface-variant max-w-sm">
+                  <p className="body-md text-on-surface-variant max-w-sm leading-relaxed">
                     Our Signature Wagyu Burger is not merely assembled; it is
                     orchestrated. Sourced with uncompromising intention.
                   </p>
                 </div>
 
-                <div className="space-y-8 border-t border-outline-variant/30 pt-8 max-w-sm">
+                <div className="space-y-8 border-t border-outline-variant/30 pt-8 max-w-sm relative">
                   {/* Layer 1 */}
-                  <div>
+                  <div ref={item1Ref} className="transition-all duration-300 origin-left">
                     <h3 className="label-caps text-primary tracking-widest mb-2">
                       01 / The Crown
                     </h3>
@@ -41,7 +132,7 @@ export default function Anatomy() {
                     </p>
                   </div>
                   {/* Layer 2 */}
-                  <div>
+                  <div ref={item2Ref} className="opacity-15 scale-95 transition-all duration-300 origin-left">
                     <h3 className="label-caps text-primary tracking-widest mb-2">
                       02 / The Acidity
                     </h3>
@@ -53,7 +144,7 @@ export default function Anatomy() {
                     </p>
                   </div>
                   {/* Layer 3 */}
-                  <div>
+                  <div ref={item3Ref} className="opacity-15 scale-95 transition-all duration-300 origin-left">
                     <h3 className="label-caps text-primary tracking-widest mb-2">
                       03 / The Bind
                     </h3>
@@ -65,7 +156,7 @@ export default function Anatomy() {
                     </p>
                   </div>
                   {/* Layer 4 */}
-                  <div>
+                  <div ref={item4Ref} className="opacity-15 scale-95 transition-all duration-300 origin-left">
                     <h3 className="label-caps text-primary tracking-widest mb-2">
                       04 / The Core
                     </h3>
@@ -84,49 +175,49 @@ export default function Anatomy() {
             <div className="anatomy-visual-container">
               <div className="relative w-[380px] h-[550px] flex items-center justify-center">
                 <Image
-                  id="layer-crown"
+                  ref={crownRef}
                   src="/assets/wagyu-burger.png"
                   alt="Burger Crown slice"
                   width={380}
                   height={550}
                   className="burger-layer-slice"
-                  style={{ transform: "translateY(-60px)" }}
+                  style={{ clipPath: "inset(0% 0% 70% 0%)", transform: "translateY(0px)" }}
                 />
                 <Image
-                  id="layer-tomato"
+                  ref={tomatoRef}
                   src="/assets/wagyu-burger.png"
                   alt="Heirloom Tomato slice"
                   width={380}
                   height={550}
                   className="burger-layer-slice"
-                  style={{ transform: "translateY(-20px)" }}
+                  style={{ clipPath: "inset(28% 0% 55% 0%)", transform: "translateY(0px)" }}
                 />
                 <Image
-                  id="layer-cheese"
+                  ref={cheeseRef}
                   src="/assets/wagyu-burger.png"
                   alt="Truffle Cheddar slice"
                   width={380}
                   height={550}
                   className="burger-layer-slice"
-                  style={{ transform: "translateY(15px)" }}
+                  style={{ clipPath: "inset(44% 0% 41% 0%)", transform: "translateY(0px)" }}
                 />
                 <Image
-                  id="layer-patty"
+                  ref={pattyRef}
                   src="/assets/wagyu-burger.png"
                   alt="Wagyu Patty slice"
                   width={380}
                   height={550}
                   className="burger-layer-slice"
-                  style={{ transform: "translateY(55px)" }}
+                  style={{ clipPath: "inset(55% 0% 20% 0%)", transform: "translateY(0px)" }}
                 />
                 <Image
-                  id="layer-heel"
+                  ref={heelRef}
                   src="/assets/wagyu-burger.png"
                   alt="Burger Heel slice"
                   width={380}
                   height={550}
                   className="burger-layer-slice"
-                  style={{ transform: "translateY(95px)" }}
+                  style={{ clipPath: "inset(76% 0% 0% 0%)", transform: "translateY(0px)" }}
                 />
               </div>
             </div>
@@ -148,7 +239,7 @@ export default function Anatomy() {
 
         <div className="space-y-16 max-w-md mx-auto">
           {/* Layer 1 */}
-          <div className="group border-b border-outline-variant/30 pb-8 space-y-4">
+          <div className="mobile-anatomy-item group border-b border-outline-variant/30 pb-8 space-y-4">
             <div className="aspect-[4/3] w-full relative overflow-hidden bg-surface-container-low border border-surface-variant/40">
               <Image
                 src="/assets/wagyu-burger.png"
@@ -172,7 +263,7 @@ export default function Anatomy() {
           </div>
 
           {/* Layer 2 */}
-          <div className="group border-b border-outline-variant/30 pb-8 space-y-4">
+          <div className="mobile-anatomy-item group border-b border-outline-variant/30 pb-8 space-y-4">
             <div className="aspect-[4/3] w-full relative overflow-hidden bg-surface-container-low border border-surface-variant/40">
               <Image
                 src="/assets/heirloom-tomatoes.png"
@@ -195,7 +286,7 @@ export default function Anatomy() {
           </div>
 
           {/* Layer 3 */}
-          <div className="group border-b border-outline-variant/30 pb-8 space-y-4">
+          <div className="mobile-anatomy-item group border-b border-outline-variant/30 pb-8 space-y-4">
             <div className="aspect-[4/3] w-full relative overflow-hidden bg-surface-container-low border border-surface-variant/40">
               <Image
                 src="/assets/wagyu-burger.png"
@@ -219,7 +310,7 @@ export default function Anatomy() {
           </div>
 
           {/* Layer 4 */}
-          <div className="group border-b border-outline-variant/30 pb-8 space-y-4">
+          <div className="mobile-anatomy-item group border-b border-outline-variant/30 pb-8 space-y-4">
             <div className="aspect-[4/3] w-full relative overflow-hidden bg-surface-container-low border border-surface-variant/40">
               <Image
                 src="/assets/raw-patty.png"

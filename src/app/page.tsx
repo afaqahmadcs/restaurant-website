@@ -30,8 +30,26 @@ export default function Home() {
 
     requestAnimationFrame(raf);
 
+    // Smooth scroll interceptor on hash navigation links
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest("a");
+      if (anchor) {
+        const href = anchor.getAttribute("href");
+        if (href && href.startsWith("#")) {
+          e.preventDefault();
+          const targetEl = document.querySelector(href) as HTMLElement;
+          if (targetEl) {
+            lenis.scrollTo(targetEl, { duration: 1.4 });
+          }
+        }
+      }
+    };
+    document.addEventListener("click", handleAnchorClick);
+
     return () => {
       lenis.destroy();
+      document.removeEventListener("click", handleAnchorClick);
     };
   }, []);
 

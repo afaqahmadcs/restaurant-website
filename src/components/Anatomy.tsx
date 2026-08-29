@@ -11,6 +11,7 @@ export default function Anatomy() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const progressRef = useRef<number>(0);
   const [webglAvailable, setWebglAvailable] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   // Fallback Image Refs
   const crownRef = useRef<HTMLImageElement | null>(null);
@@ -25,7 +26,7 @@ export default function Anatomy() {
   const item3Ref = useRef<HTMLDivElement | null>(null);
   const item4Ref = useRef<HTMLDivElement | null>(null);
 
-  // Detect WebGL availability on mount
+  // Detect WebGL availability and viewport size on mount
   useEffect(() => {
     try {
       const canvas = document.createElement("canvas");
@@ -37,6 +38,13 @@ export default function Anatomy() {
     } catch (e) {
       setWebglAvailable(false);
     }
+
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useGSAP(() => {
@@ -198,7 +206,7 @@ export default function Anatomy() {
 
             {/* Right Side: Stacked slices OR 3D canvas */}
             <div className="anatomy-visual-container flex items-center justify-center overflow-hidden">
-              {webglAvailable ? (
+              {webglAvailable && isDesktop ? (
                 <BurgerCanvas progressRef={progressRef} />
               ) : (
                 <div className="relative w-[380px] h-[550px] flex items-center justify-center">

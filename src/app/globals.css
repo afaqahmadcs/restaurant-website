@@ -284,7 +284,12 @@ html, body {
 /* Grid Utilities */
 .grid-12 {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .grid-12 {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
 }
 
 /* Anatomy Custom layouts */

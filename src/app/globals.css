@@ -464,3 +464,15 @@ html, body {
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* Editorial Image Mask Reveal */
+.reveal-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+.reveal-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: var(--color-surface-container-lowest);
+  z-index: 10;
+}

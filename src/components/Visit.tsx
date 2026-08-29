@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -12,6 +12,7 @@ interface VisitProps {
 
 export default function Visit({ onOpenReservations }: VisitProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [showToast, setShowToast] = useState(false);
   
   // Refs for animations
   const mapOverlayRef = useRef<HTMLDivElement | null>(null);
@@ -125,7 +126,10 @@ export default function Visit({ onOpenReservations }: VisitProps) {
   }, { scope: containerRef });
 
   const handleOrderOnline = () => {
-    alert("Ordering online feature coming soon. Please book a table experience to dine in!");
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+    }, 6000);
   };
 
   return (
@@ -326,6 +330,32 @@ export default function Visit({ onOpenReservations }: VisitProps) {
           </div>
         </div>
       </section>
+
+      {/* Premium Toast Notification */}
+      <div
+        className={`fixed bottom-8 right-8 z-50 bg-surface-container-high border border-primary p-6 shadow-[0_20px_40px_rgba(0,0,0,0.6)] max-w-sm transition-all duration-300 ease-in-out ${
+          showToast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        <div className="flex flex-col gap-2">
+          <span className="font-label-caps text-primary text-[10px] tracking-widest uppercase">
+            Order Online
+          </span>
+          <p className="body-md text-xs text-on-surface leading-relaxed">
+            Online Ordering is temporarily offline due to high table volume. Please call our host at{" "}
+            <a className="text-primary font-bold hover:underline" href="tel:+12125550198">
+              +1 (212) 555-0198
+            </a>{" "}
+            for pickup inquiries.
+          </p>
+          <button
+            className="text-on-surface-variant hover:text-white text-[10px] font-label-caps uppercase mt-2 text-right cursor-pointer"
+            onClick={() => setShowToast(false)}
+          >
+            Dismiss
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
